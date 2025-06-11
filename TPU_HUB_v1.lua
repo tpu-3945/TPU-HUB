@@ -1,8 +1,6 @@
 -- TPU HUB V5 - MEGA PUISSANT - By TPU {-TPU-3945-}
--- Interface: Kavo UI Library (DarkTheme modifié)
+-- Interface: Kavo UI Library (Ocean Theme intégré pour compatibilité)
 -- Anti-détection : Randomisation, Hook Protection, Delais aléatoires, Garbage Code
-
--- ========== UTILITAIRES ==========
 
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
@@ -33,7 +31,7 @@ local function RandomWait(min, max)
     wait(math.random(min*100, max*100)/100)
 end
 
--- Hook protection basique (exemple, à adapter selon exploit)
+-- Hook protection basique
 local function SafeHook(func)
     local success, result = pcall(func)
     if not success then
@@ -43,7 +41,7 @@ local function SafeHook(func)
     return result
 end
 
--- ========== CHARGEMENT DE LA LIBRAIRIE KAVO UI ==========
+-- CHARGEMENT UI LIB
 local success, Library = pcall(function()
     return loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
 end)
@@ -52,17 +50,9 @@ if not success or not Library then
     return
 end
 
--- Création fenêtre avec thème sombre bleu électrique
-local Window = Library.CreateLib("TPU HUB V5 MEGA", "DarkTheme")
-Window:ChangeTheme({
-    Background = Color3.fromRGB(15,15,20),
-    Glow = Color3.fromRGB(0,170,255),
-    Accent = Color3.fromRGB(0,170,255),
-    LightContrast = Color3.fromRGB(40,40,50),
-    DarkContrast = Color3.fromRGB(10,10,15)
-})
+local Window = Library.CreateLib("TPU HUB V5 MEGA", "Ocean")
 
--- ========== TABS & SECTIONS ==========
+-- TABS & SECTIONS
 local TabPlayer = Window:NewTab("Player")
 local SectionMovement = TabPlayer:NewSection("Mouvement & Utilitaires")
 
@@ -77,9 +67,7 @@ local SectionMisc = TabUtils:NewSection("Divers")
 local TabCredits = Window:NewTab("Crédits")
 local SectionCredits = TabCredits:NewSection("Infos")
 
--- ========== FONCTIONS PLAYER ==========
-
--- WalkSpeed + JumpPower sliders
+-- WALKSPEED / JUMPPOWER
 SectionMovement:NewSlider("WalkSpeed", "Vitesse de marche", 250, 16, function(value)
     pcall(function()
         LocalPlayer.Character.Humanoid.WalkSpeed = value
@@ -105,7 +93,7 @@ UserInputService.JumpRequest:Connect(function()
     end
 end)
 
--- NoClip optimisé (toggle)
+-- NoClip
 local noclipConnection
 SectionMovement:NewToggle("NoClip", "Traverser les murs", function(state)
     if state then
@@ -134,7 +122,7 @@ end)
 SectionMovement:NewButton("Teleport Tool", "Outil de téléportation", function()
     local tool = Instance.new("Tool")
     tool.RequiresHandle = false
-    tool.Name = RandomString(6) -- randomisation nom
+    tool.Name = RandomString(6)
     tool.Activated:Connect(function()
         local mouse = LocalPlayer:GetMouse()
         if mouse and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
@@ -144,18 +132,15 @@ SectionMovement:NewButton("Teleport Tool", "Outil de téléportation", function(
     tool.Parent = LocalPlayer.Backpack
 end)
 
--- Anti AFK auto
+-- Anti AFK
 SectionMovement:NewButton("Anti AFK", "Evite la déconnexion AFK", function()
     AntiAFK()
 end)
 
--- ========== FONCTIONS AIMBOT ULTRA PUISSANT ==========
-
--- Aimbot silencieux prédictif (basique pour exemple, à améliorer)
-
+-- Aimbot / Silent Aim
 local AimbotEnabled = false
 local SilentAim = false
-local Prediction = 0.15 -- prediction du déplacement cible
+local Prediction = 0.15
 
 SectionAimbot:NewToggle("Aimbot Ultra", "Aimbot avec prediction", function(state)
     AimbotEnabled = state
@@ -165,22 +150,17 @@ SectionAimbot:NewToggle("Silent Aim", "Tirer sans viser visuellement", function(
     SilentAim = state
 end)
 
--- Hook tir (exemple basique - adapter selon jeu)
-
 local function GetClosestTarget()
     local closest, dist = nil, math.huge
     local camera = workspace.CurrentCamera
     for _, plr in pairs(Players:GetPlayers()) do
         if plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") and plr.Character:FindFirstChild("Humanoid") and plr.Character.Humanoid.Health > 0 then
-            -- Team check (optionnel)
-            if true then
-                local pos, onScreen = camera:WorldToScreenPoint(plr.Character.HumanoidRootPart.Position)
-                if onScreen then
-                    local distance = (Vector2.new(pos.X, pos.Y) - Vector2.new(workspace.CurrentCamera.ViewportSize.X/2, workspace.CurrentCamera.ViewportSize.Y/2)).Magnitude
-                    if distance < dist then
-                        closest = plr
-                        dist = distance
-                    end
+            local pos, onScreen = camera:WorldToScreenPoint(plr.Character.HumanoidRootPart.Position)
+            if onScreen then
+                local distance = (Vector2.new(pos.X, pos.Y) - Vector2.new(camera.ViewportSize.X/2, camera.ViewportSize.Y/2)).Magnitude
+                if distance < dist then
+                    closest = plr
+                    dist = distance
                 end
             end
         end
@@ -188,17 +168,13 @@ local function GetClosestTarget()
     return closest
 end
 
--- Exemple simple de hook sur une fonction de tir (doit être adapté selon le jeu)
-
--- ========== FONCTIONS ESP & WALLHACK PUISSANT ==========
-
+-- ESP
 local ESP_Enabled = false
 local ESP_Boxes = {}
 
 SectionESP:NewToggle("ESP Joueurs", "Afficher joueurs avec box", function(state)
     ESP_Enabled = state
     if not state then
-        -- Supprimer ESP
         for _, box in pairs(ESP_Boxes) do
             box:Destroy()
         end
@@ -206,7 +182,6 @@ SectionESP:NewToggle("ESP Joueurs", "Afficher joueurs avec box", function(state)
     end
 end)
 
--- Fonction ESP basique (box autour joueur)
 RunService.Heartbeat:Connect(function()
     if ESP_Enabled then
         for _, plr in pairs(Players:GetPlayers()) do
@@ -228,6 +203,7 @@ RunService.Heartbeat:Connect(function()
                     box.Size = Vector2.new(size * 2, size * 3)
                     box.Position = Vector2.new(pos.X - box.Size.X/2, pos.Y - box.Size.Y/2)
                     box.Transparency = 1
+                    box.Visible = true
                 else
                     ESP_Boxes[plr].Visible = false
                 end
@@ -239,8 +215,7 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
--- ========== SAVE INSTANCE ==========
-
+-- Save Instance
 local synsave_loaded = false
 SectionSave:NewButton("Save la map", "Sauvegarde universelle (SynSaveInstance)", function()
     if synsave_loaded then return end
@@ -255,8 +230,7 @@ SectionSave:NewButton("Save la map", "Sauvegarde universelle (SynSaveInstance)",
     synsaveinstance(Options)
 end)
 
--- ========== AUTRES SCRIPTS UTILES ==========
-
+-- Scripts divers
 SectionMisc:NewButton("Dex Explorer V5", "Explorateur avancé", function()
     loadstring(game:HttpGet("https://raw.githubusercontent.com/AlterX404/DarkDEX-V5/main/DarkDEX-V5.lua"))()
 end)
@@ -273,11 +247,9 @@ SectionMisc:NewButton("Owl Hub", "Autre hub très complet", function()
     loadstring(game:HttpGet("https://cdn.wearedevs.net/scripts/OwlHub.txt"))()
 end)
 
--- ========== CRÉDITS ==========
-
+-- Crédits
 SectionCredits:NewLabel("Développé par TPU {-TPU-3945-}")
 SectionCredits:NewLabel("Discord : discord.gg/3aJjPpzw9b")
 SectionCredits:NewLabel("Version : V5 MEGA")
 
--- ========== FIN DU SCRIPT ==========
 print("TPU HUB V5 MEGA chargé avec succès.")
