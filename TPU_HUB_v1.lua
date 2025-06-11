@@ -1,5 +1,5 @@
 -- TPU HUB V5 - MEGA PUISSANT - By TPU {-TPU-3945-}
--- Interface: Kavo UI Library (Ocean Theme intégré pour compatibilité)
+-- Interface: Kavo UI Library (Thème hacker sombre modifié)
 -- Anti-détection : Randomisation, Hook Protection, Delais aléatoires, Garbage Code
 
 local Players = game:GetService("Players")
@@ -7,6 +7,9 @@ local LocalPlayer = Players.LocalPlayer
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local VirtualUser = game:GetService("VirtualUser")
+local Clipboard = setclipboard or function(text) -- fallback
+    print("Clipboard not supported")
+end
 
 -- Fonction anti-AFK simple
 local function AntiAFK()
@@ -50,7 +53,19 @@ if not success or not Library then
     return
 end
 
-local Window = Library.CreateLib("TPU HUB V5 MEGA", "Ocean")
+-- Thème hacker sombre modifié
+local hackerTheme = {
+    MainFrame = Color3.fromRGB(10, 10, 10),
+    Background = Color3.fromRGB(15, 15, 15),
+    Glow = Color3.fromRGB(0, 255, 136),
+    Accent = Color3.fromRGB(0, 255, 255),
+    LightContrast = Color3.fromRGB(30, 30, 30),
+    DarkContrast = Color3.fromRGB(5, 5, 5),
+    TextColor = Color3.fromRGB(0, 255, 255),
+    ElementColor = Color3.fromRGB(0, 255, 136),
+}
+
+local Window = Library.CreateLib("TPU HUB V5 MEGA [Hacker]", hackerTheme)
 
 -- TABS & SECTIONS
 local TabPlayer = Window:NewTab("Player")
@@ -137,6 +152,62 @@ SectionMovement:NewButton("Anti AFK", "Evite la déconnexion AFK", function()
     AntiAFK()
 end)
 
+-- Fly
+local FlyEnabled = false
+local FlySpeed = 50
+local flyBodyVelocity, flyBodyGyro
+
+SectionMovement:NewToggle("Fly", "Voler librement", function(state)
+    FlyEnabled = state
+    local character = LocalPlayer.Character
+    if FlyEnabled then
+        if character and character:FindFirstChild("HumanoidRootPart") then
+            local hrp = character.HumanoidRootPart
+            flyBodyVelocity = Instance.new("BodyVelocity")
+            flyBodyVelocity.Velocity = Vector3.new(0,0,0)
+            flyBodyVelocity.MaxForce = Vector3.new(1e5,1e5,1e5)
+            flyBodyVelocity.Parent = hrp
+
+            flyBodyGyro = Instance.new("BodyGyro")
+            flyBodyGyro.MaxTorque = Vector3.new(1e5,1e5,1e5)
+            flyBodyGyro.Parent = hrp
+
+            spawn(function()
+                while FlyEnabled and hrp.Parent do
+                    local moveDir = Vector3.new(0,0,0)
+                    if UserInputService:IsKeyDown(Enum.KeyCode.W) then moveDir = moveDir + workspace.CurrentCamera.CFrame.LookVector end
+                    if UserInputService:IsKeyDown(Enum.KeyCode.S) then moveDir = moveDir - workspace.CurrentCamera.CFrame.LookVector end
+                    if UserInputService:IsKeyDown(Enum.KeyCode.A) then moveDir = moveDir - workspace.CurrentCamera.CFrame.RightVector end
+                    if UserInputService:IsKeyDown(Enum.KeyCode.D) then moveDir = moveDir + workspace.CurrentCamera.CFrame.RightVector end
+                    if UserInputService:IsKeyDown(Enum.KeyCode.Space) then moveDir = moveDir + Vector3.new(0,1,0) end
+                    if UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then moveDir = moveDir - Vector3.new(0,1,0) end
+
+                    flyBodyVelocity.Velocity = moveDir.Unit * FlySpeed
+                    flyBodyGyro.CFrame = workspace.CurrentCamera.CFrame
+                    RunService.Heartbeat:Wait()
+                end
+                if flyBodyVelocity then flyBodyVelocity:Destroy() end
+                if flyBodyGyro then flyBodyGyro:Destroy() end
+            end)
+        end
+    else
+        if flyBodyVelocity then flyBodyVelocity:Destroy() end
+        if flyBodyGyro then flyBodyGyro:Destroy() end
+    end
+end)
+
+-- Gravity slider
+SectionMovement:NewSlider("Gravity", "Changer la gravité (par défaut 196.2)", 500, 196, function(value)
+    workspace.Gravity = value
+end)
+
+-- HipHeight slider
+SectionMovement:NewSlider("HipHeight", "Hauteur de hanche (Humanoid)", 10, 2, function(value)
+    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+        LocalPlayer.Character.Humanoid.HipHeight = value
+    end
+end)
+
 -- Aimbot / Silent Aim
 local AimbotEnabled = false
 local SilentAim = false
@@ -189,7 +260,7 @@ RunService.Heartbeat:Connect(function()
                 if not ESP_Boxes[plr] then
                     local box = Drawing.new("Square")
                     box.Visible = true
-                    box.Color = Color3.fromRGB(0, 170, 255)
+                    box.Color = Color3.fromRGB(0, 255, 136)
                     box.Thickness = 2
                     ESP_Boxes[plr] = box
                 end
@@ -232,7 +303,7 @@ end)
 
 -- Scripts divers
 SectionMisc:NewButton("Dex Explorer V5", "Explorateur avancé", function()
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/AlterX404/DarkDEX-V5/main/DarkDEX-V5.lua"))()
+    loadstring(game:HttpGet("https://cdn.wearedevs.net/scripts/Dex%20Explorer.txt"))()
 end)
 
 SectionMisc:NewButton("Infinite Yield", "Commandes admin avancées", function()
@@ -247,9 +318,17 @@ SectionMisc:NewButton("Owl Hub", "Autre hub très complet", function()
     loadstring(game:HttpGet("https://cdn.wearedevs.net/scripts/OwlHub.txt"))()
 end)
 
--- Crédits
+-- Crédits & Discord
 SectionCredits:NewLabel("Développé par TPU {-TPU-3945-}")
-SectionCredits:NewLabel("Discord : discord.gg/3aJjPpzw9b")
 SectionCredits:NewLabel("Version : V5 MEGA")
 
-print("TPU HUB V5 MEGA chargé avec succès.")
+local discordLink = "discord.gg/3aJjPpzw9b"
+SectionCredits:NewLabel("Discord : "..discordLink)
+
+SectionCredits:NewButton("Copier le lien Discord", "Clique pour copier le lien Discord", function()
+    Clipboard(discordLink)
+    -- Notification simple via print (adapter selon UI si possible)
+    print("[TPU HUB] Lien Discord copié dans le presse-papiers !")
+end)
+
+print("TPU HUB V5 MEGA [Hacker] chargé avec succès.")
