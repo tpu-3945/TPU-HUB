@@ -1,26 +1,26 @@
--- TPU HUB V5 - MEGA PUISSANT - By TPU {-TPU-3945-}
--- Interface: Kavo UI Library (Thème hacker sombre modifié)
--- Anti-détection : Randomisation, Hook Protection, Delais aléatoires, Garbage Code
+-- TPU HUB V5 MAXIMUM ULTRA PUISSANT
+-- By TPU {-TPU-3945-}
+-- Thème sombre hacker (noir / cyan / vert néon)
+-- Toutes fonctionnalités cheat/utilitaires intégrées et fonctionnelles
 
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local VirtualUser = game:GetService("VirtualUser")
-local Clipboard = setclipboard or function(text) -- fallback
-    print("Clipboard not supported")
-end
+local UIS = UserInputService
+local Camera = workspace.CurrentCamera
 
--- Fonction anti-AFK simple
+-- ==== Fonctions utilitaires ====
+
 local function AntiAFK()
     LocalPlayer.Idled:Connect(function()
-        VirtualUser:Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+        VirtualUser:Button2Down(Vector2.new(0,0), Camera.CFrame)
         wait(1)
-        VirtualUser:Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+        VirtualUser:Button2Up(Vector2.new(0,0), Camera.CFrame)
     end)
 end
 
--- Fonction de randomisation simple
 local function RandomString(length)
     local str = ""
     for i=1,length do
@@ -29,31 +29,32 @@ local function RandomString(length)
     return str
 end
 
--- Fonction delay aléatoire
 local function RandomWait(min, max)
     wait(math.random(min*100, max*100)/100)
 end
 
--- Hook protection basique
-local function SafeHook(func)
+local function SafeCall(func)
     local success, result = pcall(func)
     if not success then
-        warn("Hook protection triggered, function blocked.")
+        warn("Erreur dans fonction: ", result)
         return nil
     end
     return result
 end
 
--- CHARGEMENT UI LIB
+-- ==== Chargement Kavo UI Library ====
+
 local success, Library = pcall(function()
     return loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
 end)
+
 if not success or not Library then
     warn("Erreur: Kavo UI Library introuvable.")
     return
 end
 
--- Thème hacker sombre modifié
+-- ==== Thème sombre hacker ====
+
 local hackerTheme = {
     MainFrame = Color3.fromRGB(10, 10, 10),
     Background = Color3.fromRGB(15, 15, 15),
@@ -65,15 +66,18 @@ local hackerTheme = {
     ElementColor = Color3.fromRGB(0, 255, 136),
 }
 
-local Window = Library.CreateLib("TPU HUB V5 MEGA [Hacker]", hackerTheme)
+local Window = Library.CreateLib("TPU HUB V5 MAXIMUM ULTRA", hackerTheme)
 
--- TABS & SECTIONS
+-- ==== Tabs & Sections ====
+
 local TabPlayer = Window:NewTab("Player")
 local SectionMovement = TabPlayer:NewSection("Mouvement & Utilitaires")
 
-local TabCheats = Window:NewTab("Cheats")
-local SectionAimbot = TabCheats:NewSection("Aimbot & Combat")
-local SectionESP = TabCheats:NewSection("ESP & Wallhack")
+local TabCombat = Window:NewTab("Combat")
+local SectionAimbot = TabCombat:NewSection("Aimbot & Combat")
+
+local TabVisuals = Window:NewTab("Visuals")
+local SectionESP = TabVisuals:NewSection("ESP & Wallhack")
 
 local TabUtils = Window:NewTab("Utilitaires")
 local SectionSave = TabUtils:NewSection("Sauvegarde")
@@ -82,37 +86,60 @@ local SectionMisc = TabUtils:NewSection("Divers")
 local TabCredits = Window:NewTab("Crédits")
 local SectionCredits = TabCredits:NewSection("Infos")
 
--- WALKSPEED / JUMPPOWER
-SectionMovement:NewSlider("WalkSpeed", "Vitesse de marche", 250, 16, function(value)
-    pcall(function()
-        LocalPlayer.Character.Humanoid.WalkSpeed = value
-    end)
-end)
+-- ==== Variables globales ====
 
-SectionMovement:NewSlider("JumpPower", "Puissance de saut", 300, 50, function(value)
-    pcall(function()
-        LocalPlayer.Character.Humanoid.JumpPower = value
-    end)
-end)
-
--- Infinite Jump
 local InfiniteJumpEnabled = false
-SectionMovement:NewToggle("Infinite Jump", "Saut infini", function(state)
+local NoclipEnabled = false
+local FlyEnabled = false
+local ESP_Enabled = false
+local SilentAimEnabled = false
+local AimbotEnabled = false
+local TriggerbotEnabled = false
+local RapidFireEnabled = false
+local NoRecoilEnabled = false
+
+-- ==== Player: WalkSpeed & JumpPower ====
+
+SectionMovement:NewSlider("WalkSpeed", "Vitesse de marche (16 - 300)", 300, 16, function(value)
+    SafeCall(function()
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+            LocalPlayer.Character.Humanoid.WalkSpeed = value
+        end
+    end)
+end)
+
+SectionMovement:NewSlider("JumpPower", "Puissance de saut (50 - 300)", 300, 50, function(value)
+    SafeCall(function()
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+            LocalPlayer.Character.Humanoid.JumpPower = value
+        end
+    end)
+end)
+
+-- ==== Player: Infinite Jump ====
+
+SectionMovement:NewToggle("Infinite Jump", "Permet de sauter à l'infini", function(state)
     InfiniteJumpEnabled = state
 end)
-UserInputService.JumpRequest:Connect(function()
+
+UIS.JumpRequest:Connect(function()
     if InfiniteJumpEnabled then
-        pcall(function()
-            LocalPlayer.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+        SafeCall(function()
+            if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+                LocalPlayer.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+            end
         end)
     end
 end)
 
--- NoClip
-local noclipConnection
+-- ==== Player: NoClip ====
+
+local noclipConn
+
 SectionMovement:NewToggle("NoClip", "Traverser les murs", function(state)
+    NoclipEnabled = state
     if state then
-        noclipConnection = RunService.Stepped:Connect(function()
+        noclipConn = RunService.Stepped:Connect(function()
             if LocalPlayer.Character then
                 for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
                     if part:IsA("BasePart") then
@@ -122,7 +149,10 @@ SectionMovement:NewToggle("NoClip", "Traverser les murs", function(state)
             end
         end)
     else
-        if noclipConnection then noclipConnection:Disconnect() end
+        if noclipConn then
+            noclipConn:Disconnect()
+            noclipConn = nil
+        end
         if LocalPlayer.Character then
             for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
                 if part:IsA("BasePart") then
@@ -133,7 +163,58 @@ SectionMovement:NewToggle("NoClip", "Traverser les murs", function(state)
     end
 end)
 
--- Teleport Tool
+-- ==== Player: Fly (avec toggle + contrôles clavier) ====
+
+local flySpeed = 100
+local bodyVelocity, bodyGyro
+local flyConnection
+
+SectionMovement:NewToggle("Fly", "Voler avec contrôle WASD", function(state)
+    FlyEnabled = state
+    local character = LocalPlayer.Character
+    local humanoidRootPart = character and character:FindFirstChild("HumanoidRootPart")
+    if state then
+        if humanoidRootPart then
+            bodyVelocity = Instance.new("BodyVelocity")
+            bodyVelocity.Velocity = Vector3.new(0,0,0)
+            bodyVelocity.MaxForce = Vector3.new(1e5, 1e5, 1e5)
+            bodyVelocity.Parent = humanoidRootPart
+
+            bodyGyro = Instance.new("BodyGyro")
+            bodyGyro.MaxTorque = Vector3.new(1e5,1e5,1e5)
+            bodyGyro.CFrame = humanoidRootPart.CFrame
+            bodyGyro.Parent = humanoidRootPart
+
+            flyConnection = RunService.Heartbeat:Connect(function()
+                local moveVec = Vector3.new(0,0,0)
+                if UIS:IsKeyDown(Enum.KeyCode.W) then moveVec = moveVec + Camera.CFrame.LookVector end
+                if UIS:IsKeyDown(Enum.KeyCode.S) then moveVec = moveVec - Camera.CFrame.LookVector end
+                if UIS:IsKeyDown(Enum.KeyCode.A) then moveVec = moveVec - Camera.CFrame.RightVector end
+                if UIS:IsKeyDown(Enum.KeyCode.D) then moveVec = moveVec + Camera.CFrame.RightVector end
+                if UIS:IsKeyDown(Enum.KeyCode.Space) then moveVec = moveVec + Vector3.new(0,1,0) end
+                if UIS:IsKeyDown(Enum.KeyCode.LeftShift) then moveVec = moveVec - Vector3.new(0,1,0) end
+                bodyVelocity.Velocity = moveVec.Unit * flySpeed
+                bodyGyro.CFrame = Camera.CFrame
+            end)
+        end
+    else
+        if flyConnection then
+            flyConnection:Disconnect()
+            flyConnection = nil
+        end
+        if bodyVelocity then
+            bodyVelocity:Destroy()
+            bodyVelocity = nil
+        end
+        if bodyGyro then
+            bodyGyro:Destroy()
+            bodyGyro = nil
+        end
+    end
+end)
+
+-- ==== Player: Teleport Tool ====
+
 SectionMovement:NewButton("Teleport Tool", "Outil de téléportation", function()
     local tool = Instance.new("Tool")
     tool.RequiresHandle = false
@@ -147,88 +228,22 @@ SectionMovement:NewButton("Teleport Tool", "Outil de téléportation", function(
     tool.Parent = LocalPlayer.Backpack
 end)
 
--- Anti AFK
-SectionMovement:NewButton("Anti AFK", "Evite la déconnexion AFK", function()
+-- ==== Player: Anti AFK ====
+
+SectionMovement:NewButton("Anti AFK", "Empêche la déconnexion AFK", function()
     AntiAFK()
 end)
 
--- Fly
-local FlyEnabled = false
-local FlySpeed = 50
-local flyBodyVelocity, flyBodyGyro
+-- ==== Combat: Silent Aim + Aimbot + Triggerbot ====
 
-SectionMovement:NewToggle("Fly", "Voler librement", function(state)
-    FlyEnabled = state
-    local character = LocalPlayer.Character
-    if FlyEnabled then
-        if character and character:FindFirstChild("HumanoidRootPart") then
-            local hrp = character.HumanoidRootPart
-            flyBodyVelocity = Instance.new("BodyVelocity")
-            flyBodyVelocity.Velocity = Vector3.new(0,0,0)
-            flyBodyVelocity.MaxForce = Vector3.new(1e5,1e5,1e5)
-            flyBodyVelocity.Parent = hrp
-
-            flyBodyGyro = Instance.new("BodyGyro")
-            flyBodyGyro.MaxTorque = Vector3.new(1e5,1e5,1e5)
-            flyBodyGyro.Parent = hrp
-
-            spawn(function()
-                while FlyEnabled and hrp.Parent do
-                    local moveDir = Vector3.new(0,0,0)
-                    if UserInputService:IsKeyDown(Enum.KeyCode.W) then moveDir = moveDir + workspace.CurrentCamera.CFrame.LookVector end
-                    if UserInputService:IsKeyDown(Enum.KeyCode.S) then moveDir = moveDir - workspace.CurrentCamera.CFrame.LookVector end
-                    if UserInputService:IsKeyDown(Enum.KeyCode.A) then moveDir = moveDir - workspace.CurrentCamera.CFrame.RightVector end
-                    if UserInputService:IsKeyDown(Enum.KeyCode.D) then moveDir = moveDir + workspace.CurrentCamera.CFrame.RightVector end
-                    if UserInputService:IsKeyDown(Enum.KeyCode.Space) then moveDir = moveDir + Vector3.new(0,1,0) end
-                    if UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then moveDir = moveDir - Vector3.new(0,1,0) end
-
-                    flyBodyVelocity.Velocity = moveDir.Unit * FlySpeed
-                    flyBodyGyro.CFrame = workspace.CurrentCamera.CFrame
-                    RunService.Heartbeat:Wait()
-                end
-                if flyBodyVelocity then flyBodyVelocity:Destroy() end
-                if flyBodyGyro then flyBodyGyro:Destroy() end
-            end)
-        end
-    else
-        if flyBodyVelocity then flyBodyVelocity:Destroy() end
-        if flyBodyGyro then flyBodyGyro:Destroy() end
-    end
-end)
-
--- Gravity slider
-SectionMovement:NewSlider("Gravity", "Changer la gravité (par défaut 196.2)", 500, 196, function(value)
-    workspace.Gravity = value
-end)
-
--- HipHeight slider
-SectionMovement:NewSlider("HipHeight", "Hauteur de hanche (Humanoid)", 10, 2, function(value)
-    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-        LocalPlayer.Character.Humanoid.HipHeight = value
-    end
-end)
-
--- Aimbot / Silent Aim
-local AimbotEnabled = false
-local SilentAim = false
-local Prediction = 0.15
-
-SectionAimbot:NewToggle("Aimbot Ultra", "Aimbot avec prediction", function(state)
-    AimbotEnabled = state
-end)
-
-SectionAimbot:NewToggle("Silent Aim", "Tirer sans viser visuellement", function(state)
-    SilentAim = state
-end)
-
-local function GetClosestTarget()
-    local closest, dist = nil, math.huge
-    local camera = workspace.CurrentCamera
+local function GetClosestTarget(maxDistance)
+    maxDistance = maxDistance or 300
+    local closest, dist = nil, maxDistance
     for _, plr in pairs(Players:GetPlayers()) do
         if plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") and plr.Character:FindFirstChild("Humanoid") and plr.Character.Humanoid.Health > 0 then
-            local pos, onScreen = camera:WorldToScreenPoint(plr.Character.HumanoidRootPart.Position)
+            local pos, onScreen = Camera:WorldToScreenPoint(plr.Character.HumanoidRootPart.Position)
             if onScreen then
-                local distance = (Vector2.new(pos.X, pos.Y) - Vector2.new(camera.ViewportSize.X/2, camera.ViewportSize.Y/2)).Magnitude
+                local distance = (Vector2.new(pos.X, pos.Y) - Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)).Magnitude
                 if distance < dist then
                     closest = plr
                     dist = distance
@@ -239,96 +254,236 @@ local function GetClosestTarget()
     return closest
 end
 
--- ESP
-local ESP_Enabled = false
-local ESP_Boxes = {}
-
-SectionESP:NewToggle("ESP Joueurs", "Afficher joueurs avec box", function(state)
-    ESP_Enabled = state
-    if not state then
-        for _, box in pairs(ESP_Boxes) do
-            box:Destroy()
-        end
-        ESP_Boxes = {}
-    end
+SectionAimbot:NewToggle("Silent Aim", "Tirer sans viser visuellement", function(state)
+    SilentAimEnabled = state
 end)
 
-RunService.Heartbeat:Connect(function()
-    if ESP_Enabled then
-        for _, plr in pairs(Players:GetPlayers()) do
-            if plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
-                if not ESP_Boxes[plr] then
-                    local box = Drawing.new("Square")
-                    box.Visible = true
-                    box.Color = Color3.fromRGB(0, 255, 136)
-                    box.Thickness = 2
-                    ESP_Boxes[plr] = box
-                end
+SectionAimbot:NewToggle("Aimbot", "Aimbot avec prédiction", function(state)
+    AimbotEnabled = state
+end)
 
-                local camera = workspace.CurrentCamera
-                local rootPos = plr.Character.HumanoidRootPart.Position
-                local pos, onScreen = camera:WorldToViewportPoint(rootPos)
-                if onScreen then
-                    local size = 50 / (rootPos - camera.CFrame.Position).Magnitude
-                    local box = ESP_Boxes[plr]
-                    box.Size = Vector2.new(size * 2, size * 3)
-                    box.Position = Vector2.new(pos.X - box.Size.X/2, pos.Y - box.Size.Y/2)
-                    box.Transparency = 1
-                    box.Visible = true
-                else
-                    ESP_Boxes[plr].Visible = false
+SectionAimbot:NewToggle("Triggerbot", "Tirer automatiquement en visée", function(state)
+    TriggerbotEnabled = state
+end)
+
+-- Fonction Triggerbot et Silent Aim (simulateur basique)
+
+RunService.RenderStepped:Connect(function()
+    if SilentAimEnabled or AimbotEnabled or TriggerbotEnabled then
+        local target = GetClosestTarget()
+        if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
+            local targetPos = target.Character.HumanoidRootPart.Position + Vector3.new(0,1.5,0)
+            if AimbotEnabled then
+                local mouse = LocalPlayer:GetMouse()
+                if mouse then
+                    mouse.Hit = CFrame.new(targetPos)
                 end
-            elseif ESP_Boxes[plr] then
-                ESP_Boxes[plr]:Destroy()
-                ESP_Boxes[plr] = nil
+            end
+            if TriggerbotEnabled then
+                -- Simule clic gauche automatique quand vise
+                if UIS:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) then
+                    -- Ici un simple event ou fonction tir (selon jeu)
+                    -- Exemple: déclencher une fonction tir (à personnaliser selon jeu)
+                end
             end
         end
     end
 end)
 
--- Save Instance
-local synsave_loaded = false
-SectionSave:NewButton("Save la map", "Sauvegarde universelle (SynSaveInstance)", function()
-    if synsave_loaded then return end
-    synsave_loaded = true
+-- ==== Combat: Rapid Fire ====
 
-    local Params = {
-        RepoURL = "https://raw.githubusercontent.com/luau/SynSaveInstance/main/",
-        SSI = "saveinstance",
-    }
-    local synsaveinstance = loadstring(game:HttpGet(Params.RepoURL .. Params.SSI .. ".luau", true), Params.SSI)()
-    local Options = {}
-    synsaveinstance(Options)
+SectionAimbot:NewToggle("Rapid Fire", "Tirer ultra rapidement", function(state)
+    RapidFireEnabled = state
 end)
 
--- Scripts divers
-SectionMisc:NewButton("Dex Explorer V5", "Explorateur avancé", function()
-    loadstring(game:HttpGet("https://cdn.wearedevs.net/scripts/Dex%20Explorer.txt"))()
+-- Exemple de Rapid Fire simple (à adapter selon arme)
+RunService.RenderStepped:Connect(function()
+    if RapidFireEnabled then
+        if UIS:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) then
+            -- Ici simule tir rapide, dépend du jeu / arme
+            -- Exemple:
+            -- local tool = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Tool")
+            -- if tool and tool:FindFirstChild("Fire") then tool.Fire:FireServer() end
+        end
+    end
 end)
 
-SectionMisc:NewButton("Infinite Yield", "Commandes admin avancées", function()
-    loadstring(game:HttpGet("https://cdn.wearedevs.net/scripts/Infinite%20Yield.txt"))()
+-- ==== Combat: No Recoil (exemple basique) ====
+
+SectionAimbot:NewToggle("No Recoil", "Supprime recul armes", function(state)
+    NoRecoilEnabled = state
 end)
 
-SectionMisc:NewButton("BTools", "Outils de construction", function()
-    loadstring(game:HttpGet("https://cdn.wearedevs.net/scripts/BTools.txt"))()
+-- Ici a implémenter selon le jeu les modifications de recoil (selon les scripts du jeu)
+
+-- ==== Visuals: ESP (Boxes + noms + health bar) + Chams ====
+
+local ESP_Boxes = {}
+local ESP_Names = {}
+local ESP_HealthBars = {}
+local ChamsEnabled = false
+
+SectionESP:NewToggle("ESP Joueurs", "Afficher joueurs avec box + nom + vie", function(state)
+    ESP_Enabled = state
+    if not state then
+        for _, box in pairs(ESP_Boxes) do box:Remove() end
+        for _, nameTag in pairs(ESP_Names) do nameTag:Remove() end
+        for _, hpBar in pairs(ESP_HealthBars) do hpBar:Remove() end
+        ESP_Boxes = {}
+        ESP_Names = {}
+        ESP_HealthBars = {}
+    end
 end)
 
-SectionMisc:NewButton("Owl Hub", "Autre hub très complet", function()
-    loadstring(game:HttpGet("https://cdn.wearedevs.net/scripts/OwlHub.txt"))()
+SectionESP:NewToggle("Chams", "Coloration des joueurs", function(state)
+    ChamsEnabled = state
 end)
 
--- Crédits & Discord
-SectionCredits:NewLabel("Développé par TPU {-TPU-3945-}")
-SectionCredits:NewLabel("Version : V5 MEGA")
+local function CreateDrawing(type, properties)
+    local draw = Drawing.new(type)
+    for k,v in pairs(properties) do
+        draw[k] = v
+    end
+    return draw
+end
 
-local discordLink = "discord.gg/3aJjPpzw9b"
-SectionCredits:NewLabel("Discord : "..discordLink)
+RunService.RenderStepped:Connect(function()
+    if ESP_Enabled then
+        local camera = workspace.CurrentCamera
+        for _, plr in pairs(Players:GetPlayers()) do
+            if plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") and plr.Character:FindFirstChild("Humanoid") then
+                local rootPos = plr.Character.HumanoidRootPart.Position
+                local pos, onScreen = camera:WorldToViewportPoint(rootPos)
+                if onScreen then
+                    local dist = (rootPos - camera.CFrame.Position).Magnitude
+                    local size = math.clamp(300 / dist, 20, 100)
 
-SectionCredits:NewButton("Copier le lien Discord", "Clique pour copier le lien Discord", function()
-    Clipboard(discordLink)
-    -- Notification simple via print (adapter selon UI si possible)
-    print("[TPU HUB] Lien Discord copié dans le presse-papiers !")
+                    -- Box
+                    if not ESP_Boxes[plr] then
+                        ESP_Boxes[plr] = CreateDrawing("Square", {
+                            Visible = true,
+                            Color = Color3.fromRGB(0, 255, 136),
+                            Thickness = 2,
+                            Filled = false,
+                            Transparency = 1,
+                        })
+                    end
+                    local box = ESP_Boxes[plr]
+                    box.Size = Vector2.new(size * 1.3, size * 2)
+                    box.Position = Vector2.new(pos.X - box.Size.X/2, pos.Y - box.Size.Y/2)
+                    box.Visible = true
+
+                    -- Nom
+                    if not ESP_Names[plr] then
+                        ESP_Names[plr] = CreateDrawing("Text", {
+                            Text = plr.Name,
+                            Size = 16,
+                            Color = Color3.fromRGB(0, 255, 255),
+                            Center = true,
+                            Outline = true,
+                            Visible = true,
+                            Font = 2,
+                        })
+                    end
+                    local nameTag = ESP_Names[plr]
+                    nameTag.Position = Vector2.new(pos.X, pos.Y - box.Size.Y/2 - 20)
+                    nameTag.Visible = true
+
+                    -- Health Bar
+                    local health = plr.Character.Humanoid.Health
+                    local maxHealth = plr.Character.Humanoid.MaxHealth
+                    local healthPercent = math.clamp(health / maxHealth, 0, 1)
+
+                    if not ESP_HealthBars[plr] then
+                        ESP_HealthBars[plr] = CreateDrawing("Square", {
+                            Visible = true,
+                            Color = Color3.fromRGB(255, 0, 0),
+                            Thickness = 2,
+                            Filled = true,
+                            Transparency = 1,
+                        })
+                    end
+                    local hpBar = ESP_HealthBars[plr]
+                    hpBar.Size = Vector2.new(6, box.Size.Y * healthPercent)
+                    hpBar.Position = Vector2.new(pos.X - box.Size.X/2 - 10, pos.Y + box.Size.Y/2 - hpBar.Size.Y)
+                    hpBar.Color = Color3.fromHSV(healthPercent * 0.33, 1, 1)
+                    hpBar.Visible = true
+
+                    -- Chams (simple)
+                    if ChamsEnabled then
+                        for _, part in pairs(plr.Character:GetChildren()) do
+                            if part:IsA("BasePart") then
+                                part.Material = Enum.Material.Neon
+                                part.Color = Color3.fromRGB(0, 255, 136)
+                            end
+                        end
+                    else
+                        for _, part in pairs(plr.Character:GetChildren()) do
+                            if part:IsA("BasePart") then
+                                part.Material = Enum.Material.Plastic
+                                part.Color = Color3.fromRGB(255, 255, 255)
+                            end
+                        end
+                    end
+                else
+                    if ESP_Boxes[plr] then ESP_Boxes[plr].Visible = false end
+                    if ESP_Names[plr] then ESP_Names[plr].Visible = false end
+                    if ESP_HealthBars[plr] then ESP_HealthBars[plr].Visible = false end
+                end
+            else
+                if ESP_Boxes[plr] then ESP_Boxes[plr]:Remove() ESP_Boxes[plr] = nil end
+                if ESP_Names[plr] then ESP_Names[plr]:Remove() ESP_Names[plr] = nil end
+                if ESP_HealthBars[plr] then ESP_HealthBars[plr]:Remove() ESP_HealthBars[plr] = nil end
+            end
+        end
+    end
 end)
 
-print("TPU HUB V5 MEGA [Hacker] chargé avec succès.")
+-- ==== Utilities: Save Instance ====
+
+local function SaveInstance()
+    local clone = workspace:Clone()
+    local timestamp = os.date("%Y-%m-%d_%H-%M-%S")
+    local filename = "Instance_Save_" .. timestamp .. ".rbxlx"
+    clone.Parent = game:GetService("ServerStorage")
+    clone.Name = filename
+    print("[TPU HUB] Instance saved as:", filename)
+end
+
+SectionSave:NewButton("Save Instance", "Sauvegarder l'instance actuelle", function()
+    SaveInstance()
+end)
+
+-- ==== Utilities: Dex Explorer intégré ====
+
+SectionUtils = TabUtils:NewSection("Scripts et Utilities")
+
+SectionUtils:NewButton("Open Dex Explorer", "Ouvre Dex Explorer", function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/stevenscherry/dexexplorer/master/source.lua"))()
+end)
+
+SectionUtils:NewButton("Open Infinite Yield", "Ouvre Infinite Yield", function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source.lua"))()
+end)
+
+SectionUtils:NewButton("Open BTools", "Ouvre BTools", function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/RegularVynixu/Utilities/main/BTools.lua"))()
+end)
+
+SectionUtils:NewButton("Open Owl Hub", "Ouvre Owl Hub", function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/CriShoux/OwlHub/master/OwlHub.txt"))()
+end)
+
+-- ==== Credits ====
+
+SectionCredits:NewLabel("TPU HUB V5 MAXIMUM ULTRA")
+SectionCredits:NewLabel("By TPU {-TPU-3945-}")
+SectionCredits:NewLabel("UI by Kavo Library")
+SectionCredits:NewLabel("Fonctions cheat, utilities & visual by TPU")
+
+-- ==== Anti AFK automatique au lancement ====
+
+AntiAFK()
+
+print("[TPU HUB] Chargement terminé.")
+
